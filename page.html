@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Birthday Earn 💙</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* === ตัวแปรสีและตั้งค่าพื้นฐาน === */
+        :root {
+            --primary-blue: #a1c4fd;
+            --primary-pink: #c2e9fb;
+            --text-main: #333333;
+            --text-light: #555555;
+            --white: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            /* Gradient ฟ้าอมชมพูละมุน */
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* ป้องกันการคลุมดำในส่วนที่กดได้ */
+        .no-select {
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: none;
+        }
+
+        /* === พื้นหลังลอยๆ (ดาว/หัวใจ) === */
+        #particles-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .particle {
+            position: absolute;
+            bottom: -20px;
+            opacity: 0.5;
+            animation: floatUp linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* === จัดการแต่ละหน้าจอ (Screens) === */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease, visibility 0.8s;
+            z-index: 10;
+            padding: 20px;
+            text-align: center;
+        }
+        .screen.active {
+            opacity: 1;
+            visibility: visible;
+            position: relative; /* ให้ scroll ได้ถ้าเนื้อหายาว */
+        }
+
+        /* === Screen 1: Intro & Scanner === */
+        .intro-title {
+            font-size: 1.5rem;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+        .intro-subtitle {
+            font-size: 1rem;
+            color: #fff;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+        .scanner-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .scan-ring {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            transform: rotate(-90deg);
+        }
+        .scan-ring circle {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+        }
+        .scan-ring .bg { stroke: rgba(255,255,255,0.3); }
+        .scan-ring .progress {
+            stroke: #fff;
+            stroke-dasharray: 440; /* 2 * pi * r (r=70) */
+            stroke-dashoffset: 440;
+            transition: stroke-dashoffset 0.1s linear;
+        }
+        .heart-btn {
+            font-size: 4rem;
+            cursor: pointer;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+            transition: transform 0.2s;
+            position: relative;
+            z-index: 2;
+        }
+        .scan-status {
+            margin-top: 30px;
+            font-size: 1.1rem;
+            color: #fff;
+            height: 30px;
+            font-weight: 500;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* === Screen 2: Surprise & Gift Box === */
+        .gift-container {
+            cursor: pointer;
+            position: relative;
+            margin: 40px auto;
+            animation: bounceIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .gift-box {
+            font-size: 8rem;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));
+            transition: transform 0.3s;
+        }
+        .gift-container:hover .gift-box { transform: scale(1.05); }
+        .shake { animation: shake 0.5s ease-in-out infinite alternate; }
+        
+        .btn-open {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-family: 'Prompt', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--text-main);
+            cursor: pointer;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+        .btn-open:active { transform: scale(0.95); }
+
+        /* === Screen 3: Main Content === */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+        .main-message h1 {
+            color: #ff6b81;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+        .main-message p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        /* Gallery */
+        .section-title {
+            font-size: 1.5rem;
+            color: #fff;
+            margin: 40px 0 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .gallery {
+            column-count: 2;
+            column-gap: 10px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .gallery img {
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s, opacity 0.5s;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .gallery img.loaded {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Lightbox */
+        #lightbox {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s;
+        }
+        #lightbox.active { opacity: 1; visibility: visible; }
+        #lightbox img { max-width: 90%; max-height: 80vh; border-radius: 10px; }
+        .lb-btn {
+            position: absolute;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: none;
+            font-size: 2rem;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 50%;
+            backdrop-filter: blur(5px);
+        }
+        .lb-close { top: 20px; right: 20px; font-size: 1.5rem; }
+        .lb-prev { left: 20px; }
+        .lb-next { right: 20px; }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            max-width: 500px;
+            margin: 30px auto;
+            padding-left: 30px;
+            text-align: left;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 10px;
+            width: 2px; height: 100%;
+            background: rgba(255,255,255,0.6);
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 25px;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.6s ease;
+        }
+        .timeline-item.show { opacity: 1; transform: translateX(0); }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 5px; left: -26px;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #ff9a9e;
+            box-shadow: 0 0 10px rgba(255,154,158,0.5);
+        }
+        .timeline-content {
+            background: var(--glass-bg);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            font-size: 1rem;
+        }
+
+        /* Footer */
+        .footer {
+            margin: 60px 0 40px;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .big-heart {
+            font-size: 4rem;
+            animation: pulseHeart 2s infinite;
+            margin-bottom: 15px;
+        }
+        .footer h2 { font-size: 1.8rem; margin-bottom: 10px; }
+        .footer p { font-size: 1.1rem; opacity: 0.9; }
+
+        /* Music Toggle */
+        #musicToggle {
+            position: fixed;
+            top: 20px; right: 20px;
+            width: 45px; height: 45px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 50;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            animation: spinMusic 4s linear infinite;
+            animation-play-state: paused;
+        }
+        #musicToggle.playing { animation-play-state: running; }
+
+        /* === Animations === */
+        @keyframes pulseHeart {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); filter: brightness(1.2); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(5deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+        @keyframes spinMusic { 100% { transform: rotate(360deg); } }
+        
+        /* Flash effect */
+        #flash {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: #fff; z-index: 999;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s;
+        }
+        #flash.active { opacity: 1; }
+
+    </style>
+</head>
+<body>
+
+    <audio id="bgMusic" loop>
+        <source src="birthday.mp3" type="audio/mpeg">
+    </audio>
+    <div id="musicToggle">🎵</div>
+
+    <div id="particles-container"></div>
+    <div id="flash"></div>
+
+    <div id="screen1" class="screen active">
+        <h2 class="intro-title">มีบางอย่างอยากมอบให้เอิร์น... 💙</h2>
+        <p class="intro-subtitle">แต่ก่อนจะเปิดมัน<br>ขอให้เอิร์นยืนยันตัวตนด้วยหัวใจก่อนนะ</p>
+
+        <div class="scanner-container no-select" id="scanArea">
+            <svg class="scan-ring" viewBox="0 0 150 150">
+                <circle class="bg" cx="75" cy="75" r="70"></circle>
+                <circle class="progress" cx="75" cy="75" r="70" id="progressCircle"></circle>
+            </svg>
+            <div class="heart-btn" id="heartBtn">💗</div>
+        </div>
+        <div class="scan-status" id="scanStatus">กดค้างที่หัวใจ 3 วินาที</div>
+    </div>
+
+
+    <div id="screen2" class="screen">
+        <div class="glass-card main-message" style="background: transparent; border: none; box-shadow: none;">
+            <h1 style="color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">สุขสันต์วันเกิดนะเอิร์น 🎂</h1>
+            <p style="color: #fff; opacity: 0.9;">ของขวัญชิ้นนี้อาจไม่ใหญ่<br>แต่ทุกอย่างข้างในคือความรู้สึกของนั้ม 💙</p>
+        </div>
+        
+        <div class="gift-container no-select" id="giftContainer">
+            <div class="gift-box" id="giftBox">🎁</div>
+        </div>
+        
+        <button class="btn-open" id="btnOpen">เปิดของขวัญ 🎁</button>
+    </div>
+
+
+    <div id="screen3" class="screen" style="justify-content: flex-start; padding-top: 50px;">
+        
+        <div class="glass-card main-message">
+            <h1>ถึงเอิร์น ❤️</h1>
+            <p>ขอบคุณที่เข้ามาเป็นความสุข<br>และเป็นรอยยิ้มของนั้มในทุก ๆ วัน</p>
+            <p>ขอให้วันเกิดปีนี้<br>เป็นอีกหนึ่งปีที่เราได้เติบโต<br>หัวเราะ และเดินไปด้วยกัน</p>
+            <p style="margin-top: 20px; font-weight: 500; color: #ff6b81;">รักเอิร์นนะ<br>— นั้ม 💙</p>
+        </div>
+
+        <h2 class="section-title">เรื่องราวของเรา 📸</h2>
+        <div class="gallery" id="gallery">
+            <img src="images/1.jpg" alt="Memory" onerror="this.src='https://via.placeholder.com/300x400/ffb6c1/ffffff?text=รูปที่+1'">
+            <img src="images/2.jpg" alt="Memory" onerror="this.src='https://via.placeholder.com/300x300/add8e6/ffffff?text=รูปที่+2'">
+            <img src="images/3.jpg" alt="Memory" onerror="this.src='https://via.placeholder.com/300x450/ffb6c1/ffffff?text=รูปที่+3'">
+            <img src="images/4.jpg" alt="Memory" onerror="this.src='https://via.placeholder.com/300x350/add8e6/ffffff?text=รูปที่+4'">
+            <img src="images/5.jpg" alt="Memory" onerror="this.src='https://via.placeholder.com/300x400/ffb6c1/ffffff?text=รูปที่+5'">
+            <img src="images/6.jpg" alt="Memory" onerror="this.src='https://via.placeholder.com/300x300/add8e6/ffffff?text=รูปที่+6'">
+        </div>
+        <p style="color: #fff; margin-top: 15px; opacity: 0.9;">ทุกภาพมีความทรงจำ<br>และทุกความทรงจำมีเอิร์นอยู่ในนั้น</p>
+
+        <div class="timeline" id="timeline">
+            <div class="timeline-item">
+                <div class="timeline-content">วันที่เราได้เจอกัน 🌟</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content">วันที่เราเริ่มมีกันและกัน 👩‍❤️‍👨</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content">วันที่มีทั้งรอยยิ้มและวันที่เหนื่อยไปด้วยกัน 💪</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-content">และจากวันนี้... เราจะเติบโตไปด้วยกัน ❤️</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="big-heart">💗</div>
+            <h2>Happy Birthday, Earn 🎂</h2>
+            <p>ขอให้เราได้สร้างความทรงจำดี ๆ<br>ไปด้วยกันอีกเยอะ ๆ นะ</p>
+            <p style="margin-top: 20px; font-size: 1.3rem; font-weight: 500;">รักเอิร์นที่สุด<br>จากนั้ม 💙</p>
+        </div>
+
+    </div>
+
+    <div id="lightbox">
+        <button class="lb-btn lb-close" id="lbClose">✕</button>
+        <button class="lb-btn lb-prev" id="lbPrev">❮</button>
+        <img id="lbImg" src="" alt="Full size">
+        <button class="lb-btn lb-next" id="lbNext">❯</button>
+    </div>
+
+    <script>
+        // --- ระบบอนุภาคพื้นหลัง (ดาว/หัวใจ) ---
+        const particlesContainer = document.getElementById('particles-container');
+        const particleIcons = ['✨', '💙', '💗', '⭐'];
+        function createParticle() {
+            const el = document.createElement('div');
+            el.classList.add('particle');
+            el.innerText = particleIcons[Math.floor(Math.random() * particleIcons.length)];
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.fontSize = (Math.random() * 15 + 10) + 'px';
+            el.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            particlesContainer.appendChild(el);
+            setTimeout(() => { el.remove(); }, 10000);
+        }
+        setInterval(createParticle, 500);
+
+        // --- ระบบเพลง ---
+        const bgMusic = document.getElementById('bgMusic');
+        const musicToggle = document.getElementById('musicToggle');
+        let isPlaying = false;
+
+        function toggleMusic() {
+            if (isPlaying) {
+                bgMusic.pause();
+                musicToggle.classList.remove('playing');
+            } else {
+                bgMusic.play().catch(e => console.log("รอ User interaction ก่อนเล่นเพลง"));
+                musicToggle.classList.add('playing');
+            }
+            isPlaying = !isPlaying;
+        }
+        musicToggle.addEventListener('click', toggleMusic);
+
+        // --- Screen 1: ระบบสแกนหัวใจ ---
+        const scanArea = document.getElementById('scanArea');
+        const progressCircle = document.getElementById('progressCircle');
+        const heartBtn = document.getElementById('heartBtn');
+        const scanStatus = document.getElementById('scanStatus');
+        
+        let isPressing = false;
+        let progress = 0;
+        let scanAni;
+        const totalPerimeter = 440; // 2 * pi * r (70)
+
+        function updateProgress() {
+            if (isPressing) {
+                progress += 100 / (3000 / 16); // 3 วินาที (3000ms), 60fps (~16ms)
+                if (progress >= 100) {
+                    progress = 100;
+                    scanComplete();
+                    return; // หยุดลูป
+                }
+            } else {
+                progress -= 3;
+                if (progress < 0) progress = 0;
+            }
+
+            // อัปเดตวงแหวน
+            const offset = totalPerimeter - (progress / 100) * totalPerimeter;
+            progressCircle.style.strokeDashoffset = offset;
+
+            // อัปเดตข้อความ
+            if (progress === 0) scanStatus.innerText = "กดค้างที่หัวใจ 3 วินาที";
+            else if (progress > 0 && progress < 40) scanStatus.innerText = "กำลังสแกนหัวใจ...";
+            else if (progress >= 40 && progress < 80) scanStatus.innerText = "กำลังตรวจสอบความรัก...";
+            else if (progress >= 80) scanStatus.innerText = "เจอแล้ว 💗";
+
+            // ขยายหัวใจนิดๆ
+            heartBtn.style.transform = `scale(${1 + (progress/300)})`;
+
+            if (progress > 0 || isPressing) {
+                scanAni = requestAnimationFrame(updateProgress);
+            }
+        }
+
+        const startPress = (e) => {
+            e.preventDefault();
+            isPressing = true;
+            cancelAnimationFrame(scanAni);
+            updateProgress();
+        };
+        const endPress = (e) => {
+            e.preventDefault();
+            isPressing = false;
+        };
+
+        // รองรับทั้ง Touch และ Mouse
+        scanArea.addEventListener('touchstart', startPress, {passive: false});
+        scanArea.addEventListener('touchend', endPress);
+        scanArea.addEventListener('mousedown', startPress);
+        scanArea.addEventListener('mouseup', endPress);
+        scanArea.addEventListener('mouseleave', endPress);
+
+        function scanComplete() {
+            isPressing = false;
+            // เล่นเพลงทันทีที่สแกนผ่าน
+            if(!isPlaying) toggleMusic();
+            
+            // Flash Effect
+            const flash = document.getElementById('flash');
+            flash.classList.add('active');
+            
+            setTimeout(() => {
+                document.getElementById('screen1').classList.remove('active');
+                document.getElementById('screen2').classList.add('active');
+                flash.classList.remove('active');
+                
+                // เริ่มเขย่ากล่อง
+                document.getElementById('giftBox').classList.add('shake');
+            }, 500);
+        }
+
+        // --- Screen 2: เปิดของขวัญ ---
+        const btnOpen = document.getElementById('btnOpen');
+        const giftContainer = document.getElementById('giftContainer');
+        
+        function openGift() {
+            // มั่นใจว่าเพลงเล่น
+            if(!isPlaying) toggleMusic();
+
+            // Confetti Effect ง่ายๆ
+            for(let i=0; i<30; i++){
+                setTimeout(createParticle, i*50);
+            }
+
+            document.getElementById('screen2').style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById('screen2').classList.remove('active');
+                document.getElementById('screen3').classList.add('active');
+                document.getElementById('screen3').style.opacity = 1;
+                checkScroll(); // เช็คแอนิเมชั่น scroll ทันทีที่เปิดหน้า
+            }, 800);
+        }
+        btnOpen.addEventListener('click', openGift);
+        giftContainer.addEventListener('click', openGift);
+
+        // --- Screen 3: Scroll Animation & Lightbox ---
+        
+        // รูปภาพ Fade in ตอน scroll
+        const images = document.querySelectorAll('.gallery img');
+        const timelineItems = document.querySelectorAll('.timeline-item');
+        
+        function checkScroll() {
+            const triggerBottom = window.innerHeight * 0.85;
+            
+            images.forEach(img => {
+                const imgTop = img.getBoundingClientRect().top;
+                if(imgTop < triggerBottom) img.classList.add('loaded');
+            });
+
+            timelineItems.forEach(item => {
+                const itemTop = item.getBoundingClientRect().top;
+                if(itemTop < triggerBottom) item.classList.add('show');
+            });
+        }
+        window.addEventListener('scroll', checkScroll);
+
+        // Lightbox
+        const lightbox = document.getElementById('lightbox');
+        const lbImg = document.getElementById('lbImg');
+        const imgArray = Array.from(images);
+        let currentImgIndex = 0;
+
+        images.forEach((img, index) => {
+            img.addEventListener('click', () => {
+                currentImgIndex = index;
+                showLightbox();
+            });
+        });
+
+        function showLightbox() {
+            lbImg.src = imgArray[currentImgIndex].src;
+            lightbox.classList.add('active');
+        }
+
+        document.getElementById('lbClose').addEventListener('click', () => {
+            lightbox.classList.remove('active');
+        });
+
+        document.getElementById('lbPrev').addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentImgIndex = (currentImgIndex - 1 + imgArray.length) % imgArray.length;
+            showLightbox();
+        });
+
+        document.getElementById('lbNext').addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentImgIndex = (currentImgIndex + 1) % imgArray.length;
+            showLightbox();
+        });
+
+    </script>
+</body>
+</html>
+>
